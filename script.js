@@ -67,6 +67,45 @@ document.querySelector("#year").textContent = new Date().getFullYear();
 const header = document.querySelector(".site-header");
 window.addEventListener("scroll", () => header.classList.toggle("scrolled", window.scrollY > 20), { passive: true });
 
+const hero = document.querySelector(".hero");
+const main = document.querySelector("main");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const finePointer = window.matchMedia("(pointer: fine)");
+if (hero && main && !reducedMotion.matches && finePointer.matches) {
+  let targetX = 50;
+  let targetY = 48;
+  let currentX = 50;
+  let currentY = 48;
+  let rafId = null;
+
+  const renderHeroAtmosphere = () => {
+    currentX += (targetX - currentX) * .14;
+    currentY += (targetY - currentY) * .14;
+    main.style.setProperty("--hero-x", `${currentX}%`);
+    main.style.setProperty("--hero-y", `${currentY}%`);
+
+    if (Math.abs(targetX - currentX) > .08 || Math.abs(targetY - currentY) > .08) {
+      rafId = requestAnimationFrame(renderHeroAtmosphere);
+    } else {
+      rafId = null;
+    }
+  };
+
+  window.addEventListener("pointermove", event => {
+    const rect = hero.getBoundingClientRect();
+    if (event.clientY < rect.top || event.clientY > rect.bottom) return;
+    targetX = (event.clientX / window.innerWidth) * 100;
+    targetY = ((event.clientY - rect.top) / rect.height) * 100;
+    if (!rafId) rafId = requestAnimationFrame(renderHeroAtmosphere);
+  }, { passive: true });
+
+  window.addEventListener("pointerleave", () => {
+    targetX = 78;
+    targetY = 48;
+    if (!rafId) rafId = requestAnimationFrame(renderHeroAtmosphere);
+  }, { passive: true });
+}
+
 const menuButton = document.querySelector(".menu-toggle");
 const navPanel = document.querySelector(".nav-panel");
 menuButton.addEventListener("click", () => {
